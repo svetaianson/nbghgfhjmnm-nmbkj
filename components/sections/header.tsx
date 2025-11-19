@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { LogOut } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 
 export function Header() {
   const router = useRouter()
+  const pathname = usePathname()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userEmail, setUserEmail] = useState("")
+  const [authDialogOpen, setAuthDialogOpen] = useState(false)
 
   useEffect(() => {
     const checkAuthStatus = () => {
@@ -37,14 +39,28 @@ export function Header() {
   }, [])
 
   const handleLogout = () => {
+    console.log('Header handleLogout called');
+    
     if (typeof window !== "undefined") {
-      localStorage.removeItem("AUTH_TOKEN")
-      localStorage.removeItem("USER_EMAIL")
-      delete window.__AUTH_TOKEN__
-      delete window.__USER_EMAIL__
+      // Удаляем все ключи из localStorage
+      const keysToRemove = ['AUTH_TOKEN', 'USER_EMAIL', 'auth_data', 'user_email', 'user_data'];
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+      });
+      
+      // Удаляем глобальные переменные
+      delete window.__AUTH_TOKEN__;
+      delete window.__USER_EMAIL__;
+      
+      console.log('After cleanup:', {
+        AUTH_TOKEN: localStorage.getItem('AUTH_TOKEN'),
+        USER_EMAIL: localStorage.getItem('USER_EMAIL'),
+        auth_data: localStorage.getItem('auth_data'),
+        user_email: localStorage.getItem('user_email')
+      });
     }
-    setIsLoggedIn(false)
-    setUserEmail("")
+    setIsLoggedIn(false);
+    setUserEmail("");
     router.push('/');
   }
 
@@ -56,10 +72,19 @@ export function Header() {
     }
   }
 
+  const handleLogoClick = (e: React.MouseEvent) => {
+    // Если мы на главной странице, открываем диалог авторизации
+    if (pathname === '/') {
+      e.preventDefault()
+      setAuthDialogOpen(true)
+    }
+    // Иначе Link переведет на главную страницу
+  }
+
   return (
     <header className="relative z-10 px-4 py-4 sm:px-6 sm:py-5 lg:px-16 lg:py-6">
       <div className="mx-auto max-w-7xl flex items-center justify-between">
-        <Link href="/offer" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <Link href="/" onClick={handleLogoClick} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <img src="/logo.svg" alt="ForMatrix Logo" className="h-8 w-auto sm:h-10 lg:h-12" />
           <span className="font-logo text-2xl sm:text-3xl lg:text-4xl text-white tracking-tight">
             For
@@ -84,6 +109,14 @@ export function Header() {
             </>
           ) : (
             <>
+              {/* Скрытый AuthDialog для логотипа на главной странице */}
+              <AuthDialog
+                open={authDialogOpen}
+                onOpenChange={setAuthDialogOpen}
+                defaultMode="signup"
+                onAuthSuccess={handleAuthSuccess}
+              />
+              
               <AuthDialog
                 defaultMode="login"
                 onAuthSuccess={handleAuthSuccess}

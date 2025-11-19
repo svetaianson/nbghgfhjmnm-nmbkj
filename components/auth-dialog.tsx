@@ -34,11 +34,11 @@ const getAuthToken = (): string | null => {
       if (expiresAt > Date.now()) {
         return token;
       }
-      // Если токен просрочен, очищаем данные
-      clearAuthData();
+      // Если токен просрочен, удаляем только его
+      localStorage.removeItem('auth_data');
     }
   } catch (e) {
-    clearAuthData();
+    // При ошибке просто игнорируем
   }
   
   return null;
@@ -68,7 +68,7 @@ const getUserEmail = (): string | null => {
       }
     }
   } catch (e) {
-    clearAuthData();
+    // При ошибке просто игнорируем
   }
   
   return null;
@@ -81,7 +81,6 @@ const getUserData = () => {
     const userData = localStorage.getItem('user_data');
     return userData ? JSON.parse(userData) : null;
   } catch (e) {
-    clearAuthData();
     return null;
   }
 };
@@ -89,9 +88,6 @@ const getUserData = () => {
 // Улучшенная функция сохранения токена
 const saveAuthToken = (token: string, rememberMe: boolean = true) => {
   if (typeof window === 'undefined') return;
-  
-  // Очищаем старые данные
-  clearAuthData();
   
   const maxAge = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60 * 2; // 7 дней или 2 часа
   
@@ -135,14 +131,29 @@ const saveUserData = (user: any, email: string, rememberMe: boolean = true) => {
 const clearAuthData = () => {
   if (typeof window === 'undefined') return;
   
+  console.log('clearAuthData called - before:', {
+    auth_data: localStorage.getItem('auth_data'),
+    user_email: localStorage.getItem('user_email'),
+    AUTH_TOKEN: localStorage.getItem('AUTH_TOKEN'),
+    USER_EMAIL: localStorage.getItem('USER_EMAIL')
+  });
+  
   // Удаляем глобальные переменные
   delete (window as any).__AUTH_TOKEN__;
   delete (window as any).__USER_EMAIL__;
   
-  // Очищаем localStorage
-  localStorage.removeItem('auth_data');
-  localStorage.removeItem('user_email');
-  localStorage.removeItem('user_data');
+  // Очищаем localStorage - используем цикл для гарантии удаления
+  const keysToRemove = ['auth_data', 'user_email', 'user_data', 'AUTH_TOKEN', 'USER_EMAIL'];
+  keysToRemove.forEach(key => {
+    localStorage.removeItem(key);
+  });
+  
+  console.log('clearAuthData called - after:', {
+    auth_data: localStorage.getItem('auth_data'),
+    user_email: localStorage.getItem('user_email'),
+    AUTH_TOKEN: localStorage.getItem('AUTH_TOKEN'),
+    USER_EMAIL: localStorage.getItem('USER_EMAIL')
+  });
   
   // Очищаем cookie (только если они не httpOnly)
   document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=lax";
@@ -151,19 +162,25 @@ interface AuthDialogProps {
   trigger?: React.ReactNode
   defaultMode?: "login" | "signup"
   onAuthSuccess?: () => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
-export function AuthDialog({ trigger, defaultMode = "signup", onAuthSuccess }: AuthDialogProps) {
+export function AuthDialog({ trigger, defaultMode = "signup", onAuthSuccess, open: controlledOpen, onOpenChange }: AuthDialogProps) {
   const [mode, setMode] = useState<"login" | "signup">(defaultMode)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
+
+  // Используем контролируемое состояние если передано, иначе внутреннее
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen
+  const setOpen = onOpenChange || setInternalOpen
 
   // Эффект для проверки уже авторизованного пользователя
 
@@ -358,19 +375,30 @@ export function AuthDialog({ trigger, defaultMode = "signup", onAuthSuccess }: A
 
   // Функция выхода из системы
   const handleLogout = () => {
+    console.log('handleLogout called');
+    
+    // Сначала закрываем диалог
+    setOpen(false);
+    
+    // Затем очищаем данные
     clearAuthData();
+    
+    // Показываем уведомление
     toast({
       title: "Logged out",
       description: "You have been successfully logged out",
     });
-    setOpen(false);
-    router.push("/");
-    router.refresh();
+    
+    // Редирект с небольшой задержкой для завершения очистки
+    setTimeout(() => {
+      router.push("/");
+      router.refresh();
+    }, 100);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger || <Button>Sign in</Button>}</DialogTrigger>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent
         showCloseButton={false}
         className="max-w-[500px] w-[calc(100vw-2rem)] sm:w-full border-2 border-[#5F0BE8]/50 bg-gradient-to-br from-[#1a0f2e] to-[#0f0820] p-6 sm:p-8 shadow-[0_0_60px_rgba(95,11,232,0.4)] backdrop-blur-xl"

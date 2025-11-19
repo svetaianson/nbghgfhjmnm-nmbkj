@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Header } from "@/components/sections/header"
 import StepCard from "@/components/sections/step-card"
 import Image from "next/image"
@@ -76,10 +77,12 @@ const platformData: Record<Platform, { label: string; link: string; steps: Step[
 }
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [activePlatform, setActivePlatform] = useState<Platform>("quotex")
   const [accountId, setAccountId] = useState("")
   const [focusedInput, setFocusedInput] = useState(false)
   const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>(null)
+  const [notificationMessage, setNotificationMessage] = useState("")
   const [idError, setIdError] = useState("")
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE
 
@@ -112,13 +115,16 @@ export default function RegisterPage() {
       if (res.status === 429) {
         setIdError("429")
         setNotificationStatus("off")
+        setNotificationMessage("Too many requests. Please try again later.")
         return
       }
 
       if (!res.ok) {
         const err = await res.json()
+        const errorMessage = err.detail || err.message || "Server error"
         setNotificationStatus("off")
-        throw new Error(err.message || "Server error")
+        setNotificationMessage(errorMessage)
+        throw new Error(errorMessage)
       }
 
       const data = await res.json()
@@ -126,14 +132,22 @@ export default function RegisterPage() {
       // Check API response status and show appropriate notification
       if (data.answer === "ok") {
         setNotificationStatus("ok")
+        setNotificationMessage(data.detail || "Your account ID has been successfully registered!")
         setAccountId("")
         setIdError("")
+        
+        // Redirect to analyze page after 1 second
+        setTimeout(() => {
+          router.push("/analyze")
+        }, 1000)
       } else if (data.answer === "off") {
         setNotificationStatus("off")
+        setNotificationMessage(data.detail || "Registration failed")
         setIdError("Registration failed")
       }
     } catch (e: any) {
       setNotificationStatus("off")
+      setNotificationMessage(e.message || "Failed to register ID")
       setIdError(e.message || "Failed to register ID")
     }
   }
@@ -157,7 +171,14 @@ export default function RegisterPage() {
 
       <Header />
 
-      <Notification status={notificationStatus} onClose={() => setNotificationStatus(null)} />
+      <Notification 
+        status={notificationStatus} 
+        message={notificationMessage}
+        onClose={() => {
+          setNotificationStatus(null)
+          setNotificationMessage("")
+        }} 
+      />
 
       {/* Main content */}
       <main className="relative z-10 px-4 sm:px-6 lg:px-16 py-8 lg:py-16">

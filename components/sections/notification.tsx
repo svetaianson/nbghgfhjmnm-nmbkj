@@ -5,10 +5,11 @@ import { useEffect, useState } from "react"
 
 interface NotificationProps {
   status: "ok" | "off" | null
+  message?: string
   onClose: () => void
 }
 
-export function Notification({ status, onClose }: NotificationProps) {
+export function Notification({ status, message: customMessage, onClose }: NotificationProps) {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -26,9 +27,9 @@ export function Notification({ status, onClose }: NotificationProps) {
   if (!status) return null
 
   const isSuccess = status === "ok"
-  const message = isSuccess
+  const message = customMessage || (isSuccess
     ? "Your account ID has been successfully registered!"
-    : "An error occurred. Please try again."
+    : "An error occurred. Please try again.")
 
   return (
     <div
