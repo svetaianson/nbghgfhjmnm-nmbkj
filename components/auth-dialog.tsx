@@ -80,6 +80,7 @@ const getUserData = () => {
   try {
     const userData = localStorage.getItem('user_data');
     return userData ? JSON.parse(userData) : null;
+    return localStorage.getItem('user_status');
   } catch (e) {
     return null;
   }
@@ -135,7 +136,8 @@ const clearAuthData = () => {
     auth_data: localStorage.getItem('auth_data'),
     user_email: localStorage.getItem('user_email'),
     AUTH_TOKEN: localStorage.getItem('AUTH_TOKEN'),
-    USER_EMAIL: localStorage.getItem('USER_EMAIL')
+    USER_EMAIL: localStorage.getItem('USER_EMAIL'),
+    USER_STATUS: localStorage.getItem('user_status')
   });
   
   // Удаляем глобальные переменные
@@ -143,7 +145,7 @@ const clearAuthData = () => {
   delete (window as any).__USER_EMAIL__;
   
   // Очищаем localStorage - используем цикл для гарантии удаления
-  const keysToRemove = ['auth_data', 'user_email', 'user_data', 'AUTH_TOKEN', 'USER_EMAIL'];
+  const keysToRemove = ['auth_data', 'user_email', 'user_data', 'AUTH_TOKEN', 'USER_EMAIL', 'user_status'];
   keysToRemove.forEach(key => {
     localStorage.removeItem(key);
   });
@@ -152,7 +154,8 @@ const clearAuthData = () => {
     auth_data: localStorage.getItem('auth_data'),
     user_email: localStorage.getItem('user_email'),
     AUTH_TOKEN: localStorage.getItem('AUTH_TOKEN'),
-    USER_EMAIL: localStorage.getItem('USER_EMAIL')
+    USER_EMAIL: localStorage.getItem('USER_EMAIL'),
+    USER_STATUS: localStorage.getItem('user_status')
   });
   
   // Очищаем cookie (только если они не httpOnly)
@@ -323,6 +326,9 @@ export function AuthDialog({ trigger, defaultMode = "signup", onAuthSuccess, ope
 
       if (!res.ok) {
         throw new Error(data.message || `Authentication failed: ${res.status}`)
+      }
+      if (data.status !== undefined) {
+        localStorage.setItem('user_status', data.status);
       }
       localStorage.setItem("AUTH_TOKEN", data.access_token)
       localStorage.setItem("USER_EMAIL", email)
