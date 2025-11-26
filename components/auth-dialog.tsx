@@ -354,7 +354,8 @@ export function AuthDialog({ trigger, defaultMode = "signup", onAuthSuccess, ope
 
       setOpen(false)
       onAuthSuccess?.()
-      router.push("/offer")
+      const redirectPath = data.status === "verify" ? "/analyze" : "/offer";
+      router.push(redirectPath);
       router.refresh();
       
     } catch (e: any) {

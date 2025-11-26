@@ -14,7 +14,11 @@ export function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userEmail, setUserEmail] = useState("")
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
-
+  const [redirectPath, setRedirectPath] = useState("/offer");
+  useEffect(() => {
+    const status = localStorage.getItem("user_status");
+    setRedirectPath(status === "verify" ? "/analyze" : "/offer");
+  }, []);
   useEffect(() => {
     const checkAuthStatus = () => {
       const token = typeof window !== "undefined" ? localStorage.getItem("AUTH_TOKEN") : null
@@ -84,7 +88,7 @@ export function Header() {
   return (
     <header className="relative z-10 px-4 py-4 sm:px-6 sm:py-5 lg:px-16 lg:py-6">
       <div className="mx-auto max-w-7xl flex items-center justify-between">
-        <Link href="/offer" onClick={handleLogoClick} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <Link href={redirectPath}  onClick={handleLogoClick} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <img src="/logo.svg" alt="ForMatrix Logo" className="h-8 w-auto sm:h-10 lg:h-12" />
           <span className="font-logo text-2xl sm:text-3xl lg:text-4xl text-white tracking-tight">
             For
