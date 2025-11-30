@@ -88,7 +88,11 @@ export function Header() {
   return (
     <header className="relative z-10 px-4 py-4 sm:px-6 sm:py-5 lg:px-16 lg:py-6">
       <div className="mx-auto max-w-7xl flex items-center justify-between">
-        <Link href={redirectPath}  onClick={handleLogoClick} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <Link href={
+        typeof window !== "undefined" && localStorage.getItem("user_status") === "verify" 
+          ? "/analyze" 
+          : "/offer"
+      }  onClick={handleLogoClick} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <img src="/logo.svg" alt="ForMatrix Logo" className="h-8 w-auto sm:h-10 lg:h-12" />
           <span className="font-logo text-2xl sm:text-3xl lg:text-4xl text-white tracking-tight">
             For

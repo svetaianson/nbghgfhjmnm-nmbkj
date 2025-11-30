@@ -136,6 +136,11 @@ export default function RegisterPage() {
         setAccountId("")
         setIdError("")
         
+        // Store the status field in local storage
+        if (data.status) {
+          localStorage.setItem('user_status', data.status);
+        }
+        
         // Redirect to analyze page after 1 second
         setTimeout(() => {
           router.push("/analyze")

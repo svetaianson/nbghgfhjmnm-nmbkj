@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Upload, X, TrendingDown, TrendingUp, Loader2 } from "lucide-react"
+import { Upload, X, TrendingDown, TrendingUp, Loader2, Ban } from "lucide-react"
 import Image from "next/image"
 import { Header } from "@/components/sections/header"
 import { useRouter } from "next/navigation"
@@ -47,7 +47,8 @@ export default function AnalyzePage() {
   const [error, setError] = useState<string | null>(null)
   const [analysisResult, setAnalysisResult] = useState<string | null>(null)
   const [procent, setProcent] = useState<number | null>(null)
-  const [sol, setSol] = useState<'SELL' | 'BUY' | null>(null)
+  // Обновляем тип состояния для поддержки "NULL"
+  const [sol, setSol] = useState<'SELL' | 'BUY' | 'NULL' | null>(null)
   const [showActivate, setShowActivate] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -267,8 +268,13 @@ export default function AnalyzePage() {
 
       setAnalysisResult(parsed.text ?? 'No description')
       setProcent(parsed.probability ?? 0)
-      // Инвертируем рекомендацию так как в оригинале BUY означает SELL и наоборот
-      setSol(parsed.sol === 'SELL' ? 'SELL' : 'BUY')
+      // Теперь поддерживаем "NULL" статус
+      if (parsed.sol === 'NULL') {
+        setSol('NULL')
+      } else {
+        // Инвертируем рекомендацию так как в оригинале BUY означает SELL и наоборот
+        setSol(parsed.sol === 'SELL' ? 'SELL' : 'BUY')
+      }
       
       toast.success('Analysis completed!', {
         description: 'AI analysis has been successfully completed'
@@ -564,30 +570,46 @@ export default function AnalyzePage() {
 
                 {!isLoading && !error && !showActivate && analysisResult && (
                   <>
-                    {/* Recommendation button */}
+                    {/* Recommendation section - now handles NULL status */}
                     <div className="flex justify-center">
-                      <Button
-                        size="lg"
-                        className={`${
-                          sol === "SELL"
-                            ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
-                            : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                        } text-white px-12 py-6 text-xl font-bold rounded-full shadow-[0_0_30px_rgba(236,72,153,0.5)] min-w-[200px] cursor-pointer transition-colors`}
-                      >
-                        {sol === "SELL" ? (
-                          <TrendingDown className="w-6 h-6 mr-2" />
-                        ) : (
-                          <TrendingUp className="w-6 h-6 mr-2" />
-                        )}
-                        {sol}
-                      </Button>
+                      {sol === 'NULL' ? (
+                        // Text message for NULL status instead of button
+                        <div className="flex flex-col items-center justify-center p-6 bg-[#1a0f2e]/60 border-2 border-purple-500/30 rounded-2xl min-w-[200px]">
+                          <Ban className="w-8 h-8 text-purple-400 mb-2" />
+                          <span className="text-xl font-bold text-white/80">No Clear Signal</span>
+                          <p className="text-white/60 text-sm mt-1">Market conditions are neutral</p>
+                        </div>
+                      ) : sol === 'SELL' || sol === 'BUY' ? (
+                        // Original button for SELL/BUY
+                        <Button
+                          size="lg"
+                          className={`${
+                            sol === "SELL"
+                              ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
+                              : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                          } text-white px-12 py-6 text-xl font-bold rounded-full shadow-[0_0_30px_rgba(236,72,153,0.5)] min-w-[200px] cursor-pointer transition-colors`}
+                        >
+                          {sol === "SELL" ? (
+                            <TrendingDown className="w-6 h-6 mr-2" />
+                          ) : (
+                            <TrendingUp className="w-6 h-6 mr-2" />
+                          )}
+                          {sol}
+                        </Button>
+                      ) : (
+                        // Loading/empty state
+                        <div className="h-16" />
+                      )}
                     </div>
 
-                    <div className="text-center">
-                      <p className="text-white/70 text-lg">
-                        Confluence: <span className="text-purple-400 font-bold text-2xl">{procent}%</span>
-                      </p>
-                    </div>
+                    {/* Confluence block only shows when sol is not NULL */}
+                    {sol !== 'NULL' && (
+                      <div className="text-center">
+                        <p className="text-white/70 text-lg">
+                          Confluence: <span className="text-purple-400 font-bold text-2xl">{procent}%</span>
+                        </p>
+                      </div>
+                    )}
 
                     {/* Analysis text */}
                     <div className="bg-[#0a0514]/50 rounded-2xl p-6 border border-purple-500/20">
