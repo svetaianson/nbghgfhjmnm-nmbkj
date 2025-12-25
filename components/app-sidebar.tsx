@@ -7,7 +7,7 @@ import { BarChart3, GraduationCap, MessageSquareText, Settings, LogOut, Menu, X 
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n/language-context"
 import { useRouter } from "next/navigation"
-import { isUserAuthenticated } from "@/lib/auth-utils"
+import { AUTH_CHANGE_EVENT, isUserAuthenticated, notifyAuthChange } from "@/lib/auth-utils"
 
 export function AppSidebar() {
   const pathname = usePathname()
@@ -18,11 +18,11 @@ export function AppSidebar() {
 
   const [isLoggedIn, setIsLoggedIn] = React.useState(false)
 
-  React.useEffect(() => {
-    const checkAuthStatus = () => {
-      setIsLoggedIn(isUserAuthenticated())
-    }
+  const checkAuthStatus = React.useCallback(() => {
+    setIsLoggedIn(isUserAuthenticated())
+  }, [])
 
+  React.useEffect(() => {
     checkAuthStatus()
 
     // Check again after a short delay to catch rapid redirects after login
@@ -31,11 +31,17 @@ export function AppSidebar() {
     }, 50)
 
     window.addEventListener("storage", checkAuthStatus)
+    window.addEventListener(AUTH_CHANGE_EVENT, checkAuthStatus)
     return () => {
       window.removeEventListener("storage", checkAuthStatus)
+      window.removeEventListener(AUTH_CHANGE_EVENT, checkAuthStatus)
       clearTimeout(delayedCheck)
     }
-  }, [])
+  }, [checkAuthStatus])
+
+  React.useEffect(() => {
+    checkAuthStatus()
+  }, [checkAuthStatus, pathname])
 
   if (!isLoggedIn || pathname === "/") {
     return null
@@ -73,6 +79,7 @@ export function AppSidebar() {
       delete window.__AUTH_TOKEN__
       delete window.__USER_EMAIL__
     }
+    notifyAuthChange()
     router.push("/")
   }
 

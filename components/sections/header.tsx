@@ -11,7 +11,7 @@ import { ChevronDown } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { useLanguage } from "@/lib/i18n/language-context"
 import { cn } from "@/lib/utils"
-import { isUserAuthenticated, getUserEmail } from "@/lib/auth-utils"
+import { AUTH_CHANGE_EVENT, getUserEmail, isUserAuthenticated, notifyAuthChange } from "@/lib/auth-utils"
 
 const languages = [
   { value: "en", code: "US", name: "English", flag: "🇺🇸" },
@@ -62,8 +62,10 @@ export function Header() {
     }, 50)
 
     window.addEventListener("storage", checkAuthStatus)
+    window.addEventListener(AUTH_CHANGE_EVENT, checkAuthStatus)
     return () => {
       window.removeEventListener("storage", checkAuthStatus)
+      window.removeEventListener(AUTH_CHANGE_EVENT, checkAuthStatus)
       clearTimeout(delayedCheck)
     }
   }, [])
@@ -99,6 +101,7 @@ export function Header() {
     }
     setIsLoggedIn(false)
     setUserEmail("")
+    notifyAuthChange()
     router.push("/")
   }
 
@@ -107,6 +110,7 @@ export function Header() {
     if (email) {
       setUserEmail(email)
       setIsLoggedIn(true)
+      notifyAuthChange()
     }
   }
 

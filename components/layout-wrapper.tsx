@@ -2,7 +2,7 @@
 
 import React from "react"
 import { usePathname } from "next/navigation"
-import { isUserAuthenticated } from "@/lib/auth-utils"
+import { AUTH_CHANGE_EVENT, isUserAuthenticated } from "@/lib/auth-utils"
 // Компонент-обертка для основного контента
 // Добавляет отступ слева только когда пользователь залогинен (чтобы контент не перекрывался sidebar)
 // Когда пользователь НЕ залогинен - sidebar скрыт, отступ не нужен
@@ -16,16 +16,24 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname()
   const [isLoggedIn, setIsLoggedIn] = React.useState(false)
 
-  React.useEffect(() => {
-    const checkAuthStatus = () => {
-      setIsLoggedIn(isUserAuthenticated())
-    }
+  const checkAuthStatus = React.useCallback(() => {
+    setIsLoggedIn(isUserAuthenticated())
+  }, [])
 
+  React.useEffect(() => {
     checkAuthStatus()
 
     window.addEventListener("storage", checkAuthStatus)
-    return () => window.removeEventListener("storage", checkAuthStatus)
-  }, [])
+    window.addEventListener(AUTH_CHANGE_EVENT, checkAuthStatus)
+    return () => {
+      window.removeEventListener("storage", checkAuthStatus)
+      window.removeEventListener(AUTH_CHANGE_EVENT, checkAuthStatus)
+    }
+  }, [checkAuthStatus])
+
+  React.useEffect(() => {
+    checkAuthStatus()
+  }, [checkAuthStatus, pathname])
 
   const shouldAddPadding = isLoggedIn && pathname !== "/"
 
