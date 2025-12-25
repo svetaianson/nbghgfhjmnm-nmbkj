@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Mail, Key, Eye, EyeOff, X, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { notifyAuthChange } from "@/lib/auth-utils"
 
 
 
@@ -346,6 +347,7 @@ export function AuthDialog({ trigger, defaultMode = "signup", onAuthSuccess, ope
         setPassword("");
         setConfirmPassword("");
       }
+      notifyAuthChange()
 
       toast({
         title: "Success!",
@@ -389,6 +391,7 @@ export function AuthDialog({ trigger, defaultMode = "signup", onAuthSuccess, ope
     
     // Затем очищаем данные
     clearAuthData();
+    notifyAuthChange();
     
     // Показываем уведомление
     toast({
