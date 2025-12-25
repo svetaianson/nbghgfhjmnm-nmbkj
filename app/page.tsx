@@ -5,19 +5,26 @@ import { Header } from "@/components/sections/header"
 import { HeroSection } from "@/components/sections/hero-section"
 import { HowItWorksSection } from "@/components/sections/how-it-works-section"
 import { TestimonialsSection } from "@/components/sections/testimonials-section"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 
 export default function Home() {
-  const [isVisible, setIsVisible] = useState(false)
   const howItWorksRef = useRef<HTMLElement>(null)
   const testimonialsRef = useRef<HTMLElement>(null)
   const heroRef = useRef<HTMLElement>(null)
   const powerfullRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setIsVisible(true)
-
     const isMobile = window.innerWidth < 768
+    const sections = [heroRef.current, howItWorksRef.current, powerfullRef.current, testimonialsRef.current].filter(
+      Boolean,
+    ) as HTMLElement[]
+    const howItWorksCards = Array.from(
+      howItWorksRef.current?.querySelectorAll<HTMLElement>(".how-it-works-card") ?? [],
+    )
+    const testimonialCards = Array.from(
+      testimonialsRef.current?.querySelectorAll<HTMLElement>(".testimonial-card") ?? [],
+    )
+    const animatedElements = [...sections, ...howItWorksCards, ...testimonialCards]
 
     if (!isMobile) {
       const observer = new IntersectionObserver(
@@ -25,40 +32,19 @@ export default function Home() {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
               entry.target.classList.add("animate-fade-in-up")
+              observer.unobserve(entry.target)
             }
           })
         },
         { threshold: 0.1 },
       )
 
-      const sections = [heroRef.current, howItWorksRef.current, powerfullRef.current, testimonialsRef.current]
-      sections.forEach((section) => {
-        if (section) observer.observe(section)
-      })
-
-      const howItWorksCards = howItWorksRef.current?.querySelectorAll(".how-it-works-card")
-      const testimonialCards = testimonialsRef.current?.querySelectorAll(".testimonial-card")
-
-      howItWorksCards?.forEach((card) => observer.observe(card))
-      testimonialCards?.forEach((card) => observer.observe(card))
+      animatedElements.forEach((element) => observer.observe(element))
 
       return () => observer.disconnect()
     } else {
-      const sections = [heroRef.current, howItWorksRef.current, powerfullRef.current, testimonialsRef.current]
-      sections.forEach((section) => {
-        if (section) {
-          section.style.opacity = "1"
-        }
-      })
-
-      const howItWorksCards = howItWorksRef.current?.querySelectorAll(".how-it-works-card")
-      const testimonialCards = testimonialsRef.current?.querySelectorAll(".testimonial-card")
-
-      howItWorksCards?.forEach((card) => {
-        ;(card as HTMLElement).style.opacity = "1"
-      })
-      testimonialCards?.forEach((card) => {
-        ;(card as HTMLElement).style.opacity = "1"
+      animatedElements.forEach((element) => {
+        element.style.opacity = "1"
       })
     }
   }, [])
