@@ -11,8 +11,11 @@ import { Header } from "@/components/sections/header"
 import { toast } from "sonner"
 import { useLanguage } from "@/lib/i18n/language-context"
 import { Notification } from "@/components/sections/notification"
+import { useProtectedRoute } from "@/hooks/use-protected-route"
 
 export default function TradingReviewPage() {
+  // Protect this route - redirect to home if not authenticated
+  useProtectedRoute('Please login to submit trading reviews')
   type NotificationStatus = "ok" | "off" | null
 
   const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>(null)

@@ -56,8 +56,16 @@ export function Header() {
 
     checkAuthStatus()
 
+    // Check immediately after a short delay to catch rapid redirects after login
+    const delayedCheck = setTimeout(() => {
+      checkAuthStatus()
+    }, 50)
+
     window.addEventListener("storage", checkAuthStatus)
-    return () => window.removeEventListener("storage", checkAuthStatus)
+    return () => {
+      window.removeEventListener("storage", checkAuthStatus)
+      clearTimeout(delayedCheck)
+    }
   }, [])
 
   useEffect(() => {

@@ -9,6 +9,7 @@ import Image from "next/image"
 import { Header } from "@/components/sections/header"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { useProtectedRoute } from "@/hooks/use-protected-route"
 
 // Утилиты для работы с токеном и email
 const getToken = (): string | null => {
@@ -16,16 +17,16 @@ const getToken = (): string | null => {
   if (typeof window !== 'undefined' && (window as any).__AUTH_TOKEN__) {
     return (window as any).__AUTH_TOKEN__;
   }
-  
+
   // Затем проверяем localStorage
   if (typeof window !== 'undefined') {
     // Ищем токен в разных возможных ключах
-    const token = localStorage.getItem('auth_token') || 
-                 localStorage.getItem('token') || 
+    const token = localStorage.getItem('auth_token') ||
+                 localStorage.getItem('token') ||
                  localStorage.getItem('access_token');
     return token;
   }
-  
+
   return null;
 };
 
@@ -40,6 +41,9 @@ const getEmail = (): string | null => {
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://your-api-domain.com/api';
 
 export default function AnalyzePage() {
+  // Protect this route - redirect to home if not authenticated
+  useProtectedRoute('Please login to use the analysis feature')
+
   const router = useRouter()
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -50,24 +54,9 @@ export default function AnalyzePage() {
   // Обновляем тип состояния для поддержки "NULL"
   const [sol, setSol] = useState<'SELL' | 'BUY' | 'NULL' | null>(null)
   const [showActivate, setShowActivate] = useState(false)
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const uploadContainerRef = useRef<HTMLDivElement>(null)
-
-  // Проверка аутентификации при монтировании компонента
-  useEffect(() => {
-    const checkAuth = () => {
-      const token = getToken();
-      if (!token) {
-        toast.warning('Please login to use the analysis feature', {
-          duration: 3000
-        });
-        router.push('/');
-      }
-    };
-    
-    checkAuth();
-  }, [router]);
 
   // Обработка выбора файла
   const handleFileSelect = (file: File) => {

@@ -13,6 +13,7 @@ import { Globe, Clock, DollarSign, KeyRound, ChevronDown, Check, Mail, Eye, EyeO
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n/language-context"
+import { useProtectedRoute } from "@/hooks/use-protected-route"
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://your-api-domain.com/api"
 
 const languages = [
@@ -181,6 +182,9 @@ function CustomDropdown({
 }
 
 export default function SettingsPage() {
+  // Protect this route - redirect to home if not authenticated
+  useProtectedRoute('Please login to access settings')
+
   const { t, locale, setLocale } = useLanguage()
 
   const [language, setLanguage] = useState(locale)

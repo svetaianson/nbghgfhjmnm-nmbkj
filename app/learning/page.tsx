@@ -6,6 +6,7 @@ import { Header } from "@/components/sections/header"
 import { Card } from "@/components/ui/card"
 import { ChevronRight, BookOpen, TrendingUp, BarChart3, Wrench, Target, DollarSign, Shield, Rocket } from "lucide-react"
 import { useLanguage } from "@/lib/i18n/language-context"
+import { useProtectedRoute } from "@/hooks/use-protected-route"
 
 const learningTopics = [
   {
@@ -101,6 +102,9 @@ const learningTopics = [
 ]
 
 export default function LearningPage() {
+  // Protect this route - redirect to home if not authenticated
+  useProtectedRoute('Please login to access learning materials')
+
   const { t } = useLanguage()
 
   return (

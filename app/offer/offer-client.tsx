@@ -8,8 +8,12 @@ import Image from "next/image"
 import { Header } from "@/components/sections/header"
 import Link from "next/link"
 import { useLanguage } from "@/lib/i18n/language-context"
+import { useProtectedRoute } from "@/hooks/use-protected-route"
 
 export default function OfferPageClient() {
+  // Protect this route - redirect to home if not authenticated
+  useProtectedRoute('Please login to view special offers')
+
   const { t } = useLanguage()
 
   return (
