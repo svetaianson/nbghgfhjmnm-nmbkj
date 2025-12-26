@@ -163,6 +163,14 @@ export default function AnalyzePage() {
     setShowActivate(false)
   }
 
+  const handleClose = () => {
+    if (isLoading) {
+      toast.error('Wait for a response')
+      return
+    }
+    resetUpload()
+  }
+
   // Функция для отправки изображения на бэкенд
   const analyzeImage = async (imageData: string) => {
     setIsLoading(true)
@@ -491,7 +499,7 @@ export default function AnalyzePage() {
                   {/* Right side: close button */}
                   <div className="flex items-center gap-4">
                     <button
-                      onClick={resetUpload}
+                      onClick={handleClose}
                       className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6D1D7D] to-[#5F0BE8] flex items-center justify-center hover:opacity-80 transition-opacity flex-shrink-0 cursor-pointer"
                       aria-label="Close"
                     >
@@ -499,8 +507,6 @@ export default function AnalyzePage() {
                     </button>
                   </div>
                 </div>
-
-                <p className="text-white/70 text-sm sm:text-base lg:text-lg">Graph with input line</p>
 
                 {/* Uploaded chart image */}
                 <div className="relative rounded-2xl overflow-hidden border-2 border-purple-500/30">
