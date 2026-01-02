@@ -13,14 +13,16 @@ import { useProtectedRoute } from "@/hooks/use-protected-route"
 import { useLanguage } from "@/lib/i18n/language-context"
 
 const getToken = (): string | null => {
-  if (typeof window !== "undefined" && (window as any).__AUTH_TOKEN__) {
-    return (window as any).__AUTH_TOKEN__
-  }
-
   if (typeof window !== "undefined") {
-    const token =
-      localStorage.getItem("auth_token") || localStorage.getItem("token") || localStorage.getItem("access_token")
-    return token
+    const windowToken = (window as any).__AUTH_TOKEN__
+    if (windowToken) return windowToken
+
+    return (
+      localStorage.getItem("AUTH_TOKEN") ||
+      localStorage.getItem("auth_token") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("access_token")
+    )
   }
 
   return null
@@ -28,7 +30,8 @@ const getToken = (): string | null => {
 
 const getEmail = (): string | null => {
   if (typeof window !== "undefined") {
-    return localStorage.getItem("user_email")
+    const windowEmail = (window as any).__USER_EMAIL__
+    return windowEmail || localStorage.getItem("USER_EMAIL") || localStorage.getItem("user_email")
   }
   return null
 }
@@ -195,12 +198,15 @@ export default function AnalyzePage() {
           description: t.analyze.pleaseLogin,
         })
         if (typeof window !== "undefined") {
+          localStorage.removeItem("AUTH_TOKEN")
+          localStorage.removeItem("USER_EMAIL")
           localStorage.removeItem("auth_token")
           localStorage.removeItem("token")
           localStorage.removeItem("access_token")
           localStorage.removeItem("user_email")
           localStorage.removeItem("user_data")
           ;(window as any).__AUTH_TOKEN__ = null
+          ;(window as any).__USER_EMAIL__ = null
         }
         router.push("/login?reason=session_expired")
         return
