@@ -107,11 +107,6 @@ export default function TradingReviewPage() {
       return
     }
 
-    if (!/^[\x00-\x7F]*$/.test(reviewText)) {
-      toast.error(t.tradingReview.englishOnly)
-      return
-    }
-
     setIsLoading(true)
 
     try {
