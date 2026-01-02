@@ -13,6 +13,14 @@ import { useLanguage } from "@/lib/i18n/language-context"
 import { Notification } from "@/components/sections/notification"
 import { useProtectedRoute } from "@/hooks/use-protected-route"
 
+const getEmail = (): string | null => {
+  if (typeof window !== "undefined") {
+    const windowEmail = (window as any).__USER_EMAIL__
+    return windowEmail || localStorage.getItem("USER_EMAIL") || localStorage.getItem("user_email")
+  }
+  return null
+}
+
 export default function TradingReviewPage() {
   useProtectedRoute("Please login to submit trading reviews")
   type NotificationStatus = "ok" | "off" | null
@@ -115,7 +123,7 @@ export default function TradingReviewPage() {
         body: JSON.stringify({
           text: reviewText,
           image: uploadedImage || "nothink",
-          email: window.__USER_EMAIL__ || null,
+          email: getEmail(),
         }),
       })
 
